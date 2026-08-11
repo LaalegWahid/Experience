@@ -1,0 +1,1 @@
+ALTER TABLE "offerings" ALTER COLUMN "currency" SET DEFAULT 'USD';

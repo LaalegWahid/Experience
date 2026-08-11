@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls \"/c/Users/TABAA-MOHAMED/Downloads/gathra-service-provider-landing-page \\(1\\)\")",
+      "Read(//c/Users/TABAA-MOHAMED/Downloads/gathra-service-provider-landing-page \\\\\\(1\\\\\\)/**)",
+      "Skill(simplify)",
+      "Skill(simplify:*)"
+    ]
+  }
+}
