@@ -1,0 +1,214 @@
+@import "tailwindcss";
+
+/* Class-based dark mode (toggled via next-themes), instead of OS-only. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  /* Brand accent — the only accent color per the brand identity system. */
+  --accent: #ff4a00;
+  --accent-foreground: #ffffff;
+  /* Navbar surface: a warm off-white, plus a soft hairline — distinguishes
+     the bar from the page without reading as a colored strip. */
+  --nav-surface: #f1f3ee;
+  --nav-border: #dde2d4;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-nav-surface: var(--nav-surface);
+  --color-nav-border: var(--nav-border);
+  /* Secondary typeface: body copy and UI text. */
+  --font-sans: var(--font-montserrat);
+  /* Primary typeface: headlines and display type. */
+  --font-heading: var(--font-league-spartan);
+  --font-mono: var(--font-geist-mono);
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --accent: #ff4a00;
+  /* Dark surface + border for the navbar. */
+  --nav-surface: #14160f;
+  --nav-border: #2a2e22;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), sans-serif;
+  /* Full-bleed sections (e.g. the home hero) sit flush against the viewport
+     edge by design; this guards against a stray sub-pixel/rounding overflow
+     turning into a page-wide horizontal scrollbar. */
+  overflow-x: hidden;
+}
+
+/* Headlines and display type use the primary typeface; body copy stays on
+   the secondary typeface set above. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading), sans-serif;
+}
+
+/*
+ * Native <select> menus render their option popup using the OS theme, which
+ * collides with the site theme (white-on-white / dark-on-dark). Pin both the
+ * control and its options to the theme colors so text is always legible.
+ */
+select {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+select option {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/*
+ * Site-wide micro-interactions. Native interactive elements get smooth,
+ * consistent transitions and a tactile press, all guarded by
+ * prefers-reduced-motion so the site stays calm for users who ask for that.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  summary,
+  label[role="button"] {
+    transition:
+      color 0.18s ease,
+      background-color 0.18s ease,
+      border-color 0.18s ease,
+      box-shadow 0.2s ease,
+      opacity 0.18s ease,
+      transform 0.12s ease;
+  }
+
+  /* Tactile press feedback. */
+  button:not(:disabled):active,
+  a:active {
+    transform: scale(0.97);
+  }
+}
+
+/* Card entrance: a subtle rise + fade, opt-in via .animate-rise. */
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-rise {
+  animation: riseIn 0.4s ease both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise {
+    animation: none;
+  }
+}
+
+/* Playful wiggle on hover — used by the hero's people cards. Plays once per
+   hover; disabled for reduced-motion. */
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(-3deg);
+  }
+  40% {
+    transform: rotate(2deg);
+  }
+  60% {
+    transform: rotate(-2deg);
+  }
+  80% {
+    transform: rotate(1deg);
+  }
+}
+.wiggle-hover:hover {
+  animation: wiggle 0.5s ease-in-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wiggle-hover:hover {
+    animation: none;
+  }
+}
+
+/* Background hero video: for reduced-motion users, hide it so the static
+   poster image shows instead. */
+@media (prefers-reduced-motion: reduce) {
+  video[data-hero] {
+    display: none;
+  }
+}
+
+/* Step-wizard transitions (e.g. the new-listing form). */
+@keyframes stepInRight {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes stepInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Slide a panel up from the bottom edge (e.g. the chat sheet). */
+@keyframes slideUpIn {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Itinerary popup: the text crossfades as the image carousel slides between
+   activities (the carousel transform itself is a Tailwind transition). */
+@keyframes itinFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-itin-fade {
+  animation: itinFade 0.25s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-itin-fade {
+    animation: none;
+  }
+}

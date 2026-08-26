@@ -1,0 +1,1 @@
+ALTER TABLE "service_areas" ADD COLUMN "max_travel_minutes" integer DEFAULT 120 NOT NULL;

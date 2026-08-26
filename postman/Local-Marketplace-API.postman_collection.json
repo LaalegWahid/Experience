@@ -1,0 +1,473 @@
+{
+  "info": {
+    "name": "Local Marketplace API v1",
+    "description": "Public API for the Local Experiences & Services marketplace.\n\nAuth: send your key as a bearer token (`Authorization: Bearer lm_live_…`). A key acts as its owner's account — guests can call the guest endpoints; hosts can call host + guest endpoints.\n\nSet the `baseUrl` and `apiKey` collection variables before running. Requests in order will populate `offeringId` / `providerId` / `bookingId` automatically.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{apiKey}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "apiKey",
+      "value": "lm_live_REPLACE_ME"
+    },
+    {
+      "key": "offeringId",
+      "value": ""
+    },
+    {
+      "key": "providerId",
+      "value": ""
+    },
+    {
+      "key": "bookingId",
+      "value": ""
+    },
+    {
+      "key": "xPayment",
+      "value": "",
+      "description": "x402 X-PAYMENT header for Create booking. Leave empty to see the 402 challenge; set it to the output of scripts/x402-payment.mjs to pay."
+    }
+  ],
+  "item": [
+    {
+      "name": "Discovery (read)",
+      "item": [
+        {
+          "name": "Search offerings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/offerings?q=yoga&host=&minPrice=0&maxPrice=200",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api/v1",
+                "offerings"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "yoga",
+                  "disabled": true
+                },
+                {
+                  "key": "host",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "minPrice",
+                  "value": "0",
+                  "disabled": true
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "200",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Search published offerings. All query params optional."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json().data;",
+                  "if (Array.isArray(d) && d.length) pm.collectionVariables.set('offeringId', d[0].id);",
+                  "else if (d && d.id) pm.collectionVariables.set('offeringId', d.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get offering",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/offerings/{{offeringId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api/v1",
+                "offerings",
+                "{{offeringId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json().data;",
+                  "if (d && d.provider && d.provider.id) pm.collectionVariables.set('providerId', d.provider.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get offering availability",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/offerings/{{offeringId}}/availability",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api/v1",
+                "offerings",
+                "{{offeringId}}",
+                "availability"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get provider",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/providers/{{providerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api/v1",
+                "providers",
+                "{{providerId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Booking flow (guest)",
+      "item": [
+        {
+          "name": "Create quote",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/quotes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api/v1",
+                "quotes"
+              ]
+            },
+            "description": "Price + availability quote (no charge, not persisted).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"offeringId\": \"{{offeringId}}\",\n  \"date\": \"2026-07-01\",\n  \"time\": \"14:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-PAYMENT",
+                "value": "{{xPayment}}",
+                "description": "x402 payment. Leave the xPayment variable empty to see the 402 challenge; paste the value from `node --env-file=.env scripts/x402-payment.mjs` into the xPayment collection variable to actually pay."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api/v1",
+                "bookings"
+              ]
+            },
+            "description": "Books the slot as the key owner. When x402 is enabled (X402_PAY_TO set), payment is required: with an empty X-PAYMENT you get HTTP 402 + the USDC payment requirements; retry with a signed X-PAYMENT header to settle and book. Generate the header with scripts/x402-payment.mjs.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"offeringId\": \"{{offeringId}}\",\n  \"date\": \"2026-07-01\",\n  \"time\": \"14:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json().data;",
+                  "if (d && d.id) pm.collectionVariables.set('bookingId', d.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List my bookings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api/v1",
+                "bookings"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get booking",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bookings/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api/v1",
+                "bookings",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel booking",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/bookings/{{bookingId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api/v1",
+                "bookings",
+                "{{bookingId}}",
+                "cancel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Review a completed booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api/v1",
+                "reviews"
+              ]
+            },
+            "description": "Only works after the booking is completed/executed.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": \"{{bookingId}}\",\n  \"rating\": 5,\n  \"comment\": \"Great experience!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Host (manage) — requires a host key",
+      "item": [
+        {
+          "name": "Create offering",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/offerings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api/v1",
+                "offerings"
+              ]
+            },
+            "description": "Creates a draft listing under your provider profile.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"experience\",\n  \"title\": \"Sunrise rooftop yoga\",\n  \"description\": \"A calm 60-minute flow as the sun comes up.\",\n  \"category\": \"Wellness\",\n  \"subcategory\": \"Yoga\",\n  \"format\": \"public_group\",\n  \"locationType\": \"at_host\",\n  \"priceCents\": 4500,\n  \"currency\": \"USD\",\n  \"pricingType\": \"per_person\",\n  \"durationMinutes\": 60,\n  \"capacity\": 10,\n  \"bookingCutoffMinutes\": 120,\n  \"includedItems\": [\n    \"Mat\",\n    \"Tea afterwards\"\n  ],\n  \"requirements\": [\n    \"Arrive 10 minutes early\"\n  ],\n  \"qualifications\": \"Certified yoga instructor\",\n  \"cancellationPolicy\": \"flexible\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json().data;",
+                  "if (Array.isArray(d) && d.length) pm.collectionVariables.set('offeringId', d[0].id);",
+                  "else if (d && d.id) pm.collectionVariables.set('offeringId', d.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update / publish offering",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/offerings/{{offeringId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api/v1",
+                "offerings",
+                "{{offeringId}}"
+              ]
+            },
+            "description": "Partial update. Set status to publish/archive.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"published\",\n  \"priceCents\": 5000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Set weekly availability",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/offerings/{{offeringId}}/availability",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api/v1",
+                "offerings",
+                "{{offeringId}}",
+                "availability"
+              ]
+            },
+            "description": "Replaces the recurring weekly schedule (dayOfWeek: 1=Mon … 7=Sun).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rules\": [\n    {\n      \"dayOfWeek\": 1,\n      \"startTime\": \"09:00\",\n      \"endTime\": \"17:00\"\n    },\n    {\n      \"dayOfWeek\": 3,\n      \"startTime\": \"09:00\",\n      \"endTime\": \"12:00\"\n    },\n    {\n      \"dayOfWeek\": 6,\n      \"startTime\": \"08:00\",\n      \"endTime\": \"11:00\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
